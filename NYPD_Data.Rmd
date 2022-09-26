@@ -119,7 +119,7 @@ vicData
 vicData %>%
   filter(Murders > 100)%>%
   pivot_longer(-Race) %>%
-  ggplot(aes(fill=name, y = value,x=Race)) + ggtitle("Cases/Murder Flag per Boro") +
+  ggplot(aes(fill=name, y = value,x=Race)) + ggtitle("Victime data per race") +
   geom_bar(position = "dodge", stat ="identity" )
 
 ```
