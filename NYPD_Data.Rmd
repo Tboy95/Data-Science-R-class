@@ -1,0 +1,183 @@
+---
+title: "NYPD Data"
+author: "Jose Rosario"
+date: "2022-09-16"
+output:
+  html_document: default
+  pdf_document: default
+---
+##include tidyverse
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+Read Data chunk
+```{r message=FALSE}
+library(readr)
+data <- read_csv("C:\\Users\\josea\\Downloads\\NYPD_Shooting_Incident_Data__Historic_.csv")
+data
+```
+
+After taking the raw data, now is time to filter, tidying and transforming the data
+##Tidying and Transforming Data
+
+```{r message=FALSE}
+tidyData <- data
+tidyData$INCIDENT_KEY <- NULL
+tidyData$PRECINCT <- NULL
+tidyData$OCCUR_TIME <- NULL
+tidyData$JURISDICTION_CODE <- NULL
+tidyData$LOCATION_DESC <- NULL
+tidyData$PERP_AGE_GROUP <- NULL
+tidyData$PERP_SEX <- NULL
+tidyData$PERP_RACE <- NULL
+tidyData$X_COORD_CD <- NULL
+tidyData$Y_COORD_CD <- NULL
+tidyData$Latitude <- NULL
+tidyData$Longitude <- NULL
+tidyData$Lon_Lat <- NULL
+
+names(tidyData)[1] <- 'Date'
+names(tidyData)[2] <- 'Boro'
+names(tidyData)[3] <- 'MurderFlag'
+names(tidyData)[4] <- 'VictimAgeGroup'
+names(tidyData)[5] <- 'VictimSex'
+names(tidyData)[6] <- 'VictimRace'
+tidyData$Date <- as.Date(tidyData$Date, "%m/%d/%Y")
+tidyData <-tidyData[order(tidyData$Boro),]
+tidyData
+```
+After getting a new arranged data, now it can be plotted... in this case how many deaths are in each Boro compared to the number of incidents
+
+##  Plots 1
+
+You can also embed plots, for example:
+
+```{r message=FALSE}
+murderFlag_by_boro <- data.frame(Boro = c('The Bronx',"Brooklyn","Manhattan","Queens","Staten Island"),
+                           Cases = c(sum(tidyData$Boro == 'BRONX'),
+                                     sum(tidyData$Boro == 'BROOKLYN'),
+                                     sum(tidyData$Boro == 'MANHATTAN'),
+                                     sum(tidyData$Boro == 'QUEENS'),
+                                     sum(tidyData$Boro == 'STATEN ISLAND')),
+                           Murders = c(sum(tidyData$MurderFlag == TRUE & tidyData$Boro == 'BRONX'),
+                                       sum(tidyData$MurderFlag == TRUE & tidyData$Boro == 'BROOKLYN'),
+                                       sum(tidyData$MurderFlag == TRUE & tidyData$Boro == 'MANHATTAN'),
+                                       sum(tidyData$MurderFlag == TRUE & tidyData$Boro == 'QUEENS'),
+                                       sum(tidyData$MurderFlag == TRUE & tidyData$Boro == 'STATEN ISLAND')))
+murderFlag_by_boro
+murderFlag_by_boro %>%
+  pivot_longer(-Boro) %>%
+  ggplot(aes(fill=name, y = value,x=Boro)) + ggtitle("Cases/Murder Flag per Boro") +
+  geom_bar(position = "dodge", stat ="identity" )
+
+```
+
+
+##plot 3
+
+
+```{r message=FALSE}
+vicData <- data.frame(Race = c(unique(tidyData$VictimRace)),
+                      cases = c(sum(tidyData$VictimRace=="BLACK HISPANIC"),
+                                sum(tidyData$VictimRace=="BLACK"),
+                                sum(tidyData$VictimRace=="WHITE HISPANIC"),
+                                sum(tidyData$VictimRace=="WHITE"),
+                                sum(tidyData$VictimRace=="ASIAN / PACIFIC ISLANDER"),
+                                sum(tidyData$VictimRace=="UNKNOWN"),
+                                sum(tidyData$VictimRace=="AMERICAN INDIAN/ALASKAN NATIVE")),
+                      Male = c(sum(tidyData$VictimRace=="BLACK HISPANIC" & tidyData$VictimSex == "M"),
+                                sum(tidyData$VictimRace=="BLACK" & tidyData$VictimSex == "M"),
+                                sum(tidyData$VictimRace=="WHITE HISPANIC" & tidyData$VictimSex == "M"),
+                                sum(tidyData$VictimRace=="WHITE" & tidyData$VictimSex == "M"),
+                                sum(tidyData$VictimRace=="ASIAN / PACIFIC ISLANDER" & tidyData$VictimSex == "M"),
+                                sum(tidyData$VictimRace=="UNKNOWN" & tidyData$VictimSex == "M"),
+                                sum(tidyData$VictimRace=="AMERICAN INDIAN/ALASKAN NATIVE" & tidyData$VictimSex == "M")),
+                      Female = c(sum(tidyData$VictimRace=="BLACK HISPANIC" & tidyData$VictimSex == "F"),
+                                sum(tidyData$VictimRace=="BLACK" & tidyData$VictimSex == "F"),
+                                sum(tidyData$VictimRace=="WHITE HISPANIC" & tidyData$VictimSex == "F"),
+                                sum(tidyData$VictimRace=="WHITE" & tidyData$VictimSex == "F"),
+                                sum(tidyData$VictimRace=="ASIAN / PACIFIC ISLANDER" & tidyData$VictimSex == "F"),
+                                sum(tidyData$VictimRace=="UNKNOWN" & tidyData$VictimSex == "F"),
+                                sum(tidyData$VictimRace=="AMERICAN INDIAN/ALASKAN NATIVE" & tidyData$VictimSex == "F")),
+                      Murders = c(sum(tidyData$VictimRace=="BLACK HISPANIC" & tidyData$MurderFlag == TRUE),
+                                sum(tidyData$VictimRace=="BLACK" & tidyData$MurderFlag == TRUE),
+                                sum(tidyData$VictimRace=="WHITE HISPANIC" & tidyData$MurderFlag == TRUE),
+                                sum(tidyData$VictimRace=="WHITE" & tidyData$MurderFlag == TRUE),
+                                sum(tidyData$VictimRace=="ASIAN / PACIFIC ISLANDER" & tidyData$MurderFlag == TRUE),
+                                sum(tidyData$VictimRace=="UNKNOWN" & tidyData$MurderFlag == TRUE),
+                                sum(tidyData$VictimRace=="AMERICAN INDIAN/ALASKAN NATIVE" & tidyData$MurderFlag == TRUE)))
+vicData
+vicData %>%
+  filter(Murders > 100)%>%
+  pivot_longer(-Race) %>%
+  ggplot(aes(fill=name, y = value,x=Race)) + ggtitle("Cases/Murder Flag per Boro") +
+  geom_bar(position = "dodge", stat ="identity" )
+
+```
+
+##  Plot 3
+now, it's time to visualize cases/murder per incident in the last 20 years
+
+
+```{r message=FALSE}
+newTidyData <-tidyData[order(tidyData$Date),]
+newTidyData$VictimAgeGroup <- NULL
+newTidyData$VictimSex <- NULL
+newTidyData$VictimRace <- NULL
+
+noVictimTable <-aggregate(newTidyData["MurderFlag"] == FALSE, by=newTidyData["Date"], sum)
+VictimTable <- aggregate(newTidyData["MurderFlag"] == TRUE, by=newTidyData["Date"], sum)
+incidentSummary <- data.frame(Date = noVictimTable$Date,
+                Cases = noVictimTable$MurderFlag + VictimTable$MurderFlag,
+                Murder = VictimTable$MurderFlag)
+incidentSummary %>%
+  filter(Murder > 0) %>%
+  ggplot(aes(x = Date,y=Cases)) +
+  geom_line(aes(color = "Cases")) +
+  geom_point(aes(color = "Cases")) + 
+  geom_line(aes(y=Murder,color = "Murder")) +
+  geom_point(aes(y = Murder, color = "Murder")) + 
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(angle = 90)) +
+  labs(title = "NYPD shooting incidents", y = NULL)
+  
+```
+
+
+##Modeling
+
+for our model, we use the murderflag vs number of cases and then start making prediction of it 
+
+```{r message=FALSE}
+mod <- lm(Murder ~ Cases, data = incidentSummary)
+summary(mod)
+data<-incidentSummary %>% mutate(pred = predict(mod))
+
+data %>%
+  filter(Murder > 0) %>%
+  ggplot(aes(x = Date,y=Cases)) +
+  geom_line(size = 1,aes(y=Murder,color = "Murder")) +
+  geom_point(size = 1,aes(y = Murder, color = "Murder")) + 
+  geom_line(size = 1,aes(y=pred,color = "pred")) +
+  geom_point(size = 1,aes(y = pred, color = "pred")) + 
+  theme(legend.position = "bottom",
+        axis.text.x = element_text(angle = 90)) +
+  labs(title = "NYPD shooting incidents model pred", y = NULL)
+  
+```
+##BIAS
+
+In conclusion, the amount of violence in NY is not decreasing as it should, but there isn't information of the root of the problem to find a solution.
+
+*This things tend to happen when there isn't enough police resources on the street to prevent the incidents to happen 
+
+*Increasing education for everyone could be a solution to reduce violence in the future
